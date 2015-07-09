@@ -1,0 +1,242 @@
+preload = true
+
+#=====================================
+# Components
+#=====================================
+use_hog = false
+use_segmentation_roi = false
+use_local_max = true
+
+
+#=====================================
+# Input paths - (for each frame)
+#=====================================
+#string pattern path to your camera setting (can contain groundplane) files exp:
+camPath_left = /sunnyday/left/maps-sfm-avg-jan2010/camera.%05d
+
+#in case you have a set of preprocessed ground planes for each frame (but for sunnyday it doesn't need)
+#path_to_planes = /sunnyday/left/gps/gp%05d.txt
+
+#string pattern path to your image files exp:
+sImagePath_left = /sunnyday/left/image_%08d_0.png
+
+#string pattern path to your depth map files exp:
+tempDepthL = /sunnyday/dp/float/disparity_%08d_0.txt
+
+
+is_project_plane_to_world = false
+
+
+#=====================================
+# Distance Range Accepted Detections
+#=====================================
+distance_range_accepted_detections = 15
+
+#=====================================
+# ROI
+#=====================================
+inc_width_ratio = 0.2
+inc_height_ratio = 0.0
+region_size_threshold = 10
+
+max_height = 2.1
+min_height = 1.0
+
+#======================
+# Freespace
+#======================
+freespace_scaleZ = 20;
+freespace_scaleX = 20;
+freespace_minX = -20;
+freespace_minZ = 0;
+freespace_maxX = 20;
+freespace_maxZ = 30;
+freespace_threshold = 300
+# for Segmentation
+#freespace_threshold = 500
+freespace_max_depth_to_cons = 20
+log_weight = true
+freespace_max_height = 2.3
+
+#====================================
+# Evaluation Parameters
+#====================================
+evaluation_NMS_threshold = 0.25
+evaluation_NMS_threshold_LM = 0.35
+evaluation_NMS_threshold_Border = 0.0037
+evaluation_inc_height_ratio = 0.2
+evaluation_stride = 3
+evaluation_scale_stride = 1.03
+evaluation_nr_scales = 1
+evaluation_inc_cropped_height = 20
+evaluation_greedy_NMS_overlap_threshold = 0.3
+evaluation_greedy_NMS_threshold = 0.25
+
+#======================
+# World scale
+#======================
+WORLD_SCALE = 0.001
+
+#===========================
+# height and width of images
+#===========================
+dImWidth = 640
+dImHeight = 480
+
+#====================================
+# Camera
+#====================================
+baseline = 399.999676570766894
+
+#====================================
+# Number of Frames / offset
+#====================================
+numberFrames = 356
+#numberFrames = 100
+nOffset = 97
+
+#====================================
+# Console output
+#====================================
+verbose = false
+
+#====================================
+#Determines if save bounding boxes or not
+#====================================
+export_bounding_box = false
+bounding_box_path = /your_Detections_folder/d_15.idl
+
+#=====================================
+# Determines if save result images or not
+#=====================================
+export_result_images = false
+result_images_path = /your_results_folder/image_%08d.png
+
+#====================================
+# Size of Template
+#====================================
+template_size = 40
+
+
+#=======TRACKIG========================================================================================================================
+
+#====================================
+# Detections
+#====================================
+cutDetectionsUsingDepth = false
+frameRate = 15
+
+#====================================
+# Camera
+#====================================
+farPlane = 60
+
+#====================================
+# World scale
+#====================================
+binSize = 8
+
+#====================================
+# Pedestrians width and height
+#====================================
+pedSizeWVis = 0.6
+pedSizeWCom = 0.2
+pedSizeHCom = 1.7
+
+#====================================
+# History
+#====================================
+history = 50
+
+#========================
+# Pedestrians parameter
+#========================
+dObjHeight = 1.75
+dObjHVar = 0.2
+
+#===========================
+# Adjustment for Color Histogram
+#===========================
+cutHeightBBOXforColor = 0.1;
+cutWidthBBOXColor = 0.3;
+posponeCenterBBOXColor = 0.0;
+
+#====================================
+# Thresholds for combining the detectiob from left and right camera
+#====================================
+probHeight = 0.2
+
+#====================================
+# Visualisation
+#====================================
+render_bbox3D = true
+render_bbox2D = false
+render_tracking_numbers = false
+
+#========================
+# MDL parameters for trajectories
+#========================
+k1 = 0.0 # "counterweight": min. support for a hypothesis
+k2 = 0.05  # rel. importance of poconst ints vs. poconst float strength
+k3 = 20  # overlap penalty
+k4 = 50  # temp. decay for static objects
+
+#=======================
+# Threshold for distinction between static/moving object
+#=======================
+minvel = 0.025
+dMaxPedVel = 1.11
+
+#====================================
+# Trajectory
+#====================================
+threshLengthTraj = z
+dSameIdThresh = 0.49
+
+#=========================
+# Thresholds for accepted and displayed hypotheses
+#=========================preload
+dTheta2 = 0.1
+
+#=========================
+# Time ant for temporal decay
+#=========================
+dTau = 35
+
+#==========================
+# Time horizon for event cone search
+#==========================
+coneTimeHorizon = 5
+maxHoleLen = 50
+dHolePenalty = 0.01
+
+#==============================
+# Kalman Filter
+#==============================
+# Q - the system covariance
+sysUncX = 0.5
+sysUncY = 0.9
+sysUncRot = 0.1
+sysUncVel = 0.1
+sysUncAcc = 1
+
+kalmanObsMotionModelthresh = 0.9
+kalmanObsColorModelthresh = 0.85
+
+
+#=======GP-Estimation=================================================================================
+nrInter_ransac = 30
+numberOfPoints_reconAsObstacle = 500
+
+
+#=======ROISegmentation===============================================================================
+sigmaX = 2;
+precisionX = 2;
+sigmaZ = 3;
+precisionZ = 3;
+
+
+#==========HOG Detector===========================================
+hog_max_scale = 1.3
+hog_score_thresh = 0.1
+

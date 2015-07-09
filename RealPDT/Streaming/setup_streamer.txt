@@ -1,0 +1,7 @@
+connect ipad with robot router
+open /home/mmp/Projects/europa-lm-streamer/StreamingApp.cpp
+set addDestIP("10.0.0.3"); ipad IP - settings - general - network - WIFI  - press blue arrow - IP Address
+
+./run_localization_streamer.sh
+
+start Streaming App on Ipad
