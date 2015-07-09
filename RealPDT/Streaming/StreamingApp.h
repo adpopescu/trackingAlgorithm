@@ -1,6 +1,7 @@
 #ifndef STREAMINGAPP_DENNIS_H
 #define STREAMINGAPP_DENNIS_H
 
+#include <unistd.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <sys/types.h>
