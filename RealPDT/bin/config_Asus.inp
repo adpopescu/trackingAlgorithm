@@ -19,7 +19,7 @@ use_local_max = true
 # Recording
 #=====================================
 #get frames from camera or from recorded data (with this application)
-from_camera = false
+from_camera = true
 #this path is used for recording and replaying
 from_file_path = rec
 
