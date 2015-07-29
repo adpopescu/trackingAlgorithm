@@ -15,6 +15,15 @@
 #include <cassert>
 #include "Vector.h"
 
+inline int peek(FILE *stream)
+{
+    int c;
+
+    c = fgetc(stream);
+    ungetc(c, stream);
+
+    return c;
+}
 
 using namespace std;
 //+++++++++++++++++++++++++++++++ Definition +++++++++++++++++++++++++++++++++
@@ -559,7 +568,9 @@ template <class T> void Matrix<T>::ReadFromPGM(const char* filename)
     // Find beginning of file (P5)
     while (getc(stream) != 'P');
     if (getc(stream) != '5') cerr << "No PGM Image" << endl;
-    while (getc(stream) != '\n');
+    while (peek(stream) == ' ' || peek(stream) == '\n') {
+        getc(stream);
+    }
     // Remove comments and empty lines
     dummy = getc(stream);
     while (dummy == '#') {

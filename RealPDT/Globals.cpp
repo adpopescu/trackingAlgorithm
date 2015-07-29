@@ -11,6 +11,7 @@ string Globals::sImagePath_left = "";
 string Globals::tempDepthL = "";
 string Globals::path_to_planes = "";
 bool Globals::is_project_plane_to_world;
+bool Globals::is_depth_disparity_map;
 
 ////////////////////////////////////////
 // Distance Range Accepted Detections

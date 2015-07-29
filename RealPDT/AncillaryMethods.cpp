@@ -1,4 +1,7 @@
 #include "AncillaryMethods.h"
+#include "CImg/CImg.h"
+
+using namespace cimg_library;
 
 void AncillaryMethods::IntersetRect(const Vector<double>& rect1, const Vector<double>& rect2, Vector<double>& rectInter)
 {
@@ -144,46 +147,68 @@ Vector<double> AncillaryMethods::PlaneToWorld(const Camera& camera, const Vector
 //******************************************************************
 Matrix<double>  AncillaryMethods::GetDepthLibelas(int frame_nr, const Camera& camera, double baseline)
 {
-
-
-    //================================================
-    // Read in the disparity image
-    //================================================
-    char dispImagePath[128];
-
-    sprintf(dispImagePath, Globals::tempDepthL.c_str(), frame_nr);
-
-    string path_string(dispImagePath);
-    Matrix<float> image(Globals::dImWidth, Globals::dImHeight, 0.0);
-
-    if(path_string.find(".txt") != string::npos)
-    {
-        image.ReadFromTXT(dispImagePath);
-    }
-    else
-    {
-        image.ReadFromBinaryFile(dispImagePath);
-    }
-
-    //================================================
-    // Compute the depth map
-    //================================================
     Matrix<double> depthMap(Globals::dImWidth, Globals::dImHeight, 0.0);
 
-    Matrix<double> intrinsics = camera.get_K();
+    if (Globals::is_depth_disparity_map) {
+        //================================================
+        // Read in the disparity image
+        //================================================
+        char dispImagePath[128];
 
-    double focalLength = intrinsics(0,0);
+        sprintf(dispImagePath, Globals::tempDepthL.c_str(), frame_nr);
 
-    double par = (baseline*focalLength);
+        string path_string(dispImagePath);
+        Matrix<float> image(Globals::dImWidth, Globals::dImHeight, 0.0);
 
-    for(int i = 0; i < Globals::dImWidth; i++)
-    {
-        for(int j = 0; j < Globals::dImHeight; j++)
+        if(path_string.find(".txt") != string::npos)
         {
-            depthMap(i,j) = max(0.0, min(30.0,(par/(image(i,j)))/1000.0));
+            image.ReadFromTXT(dispImagePath);
         }
-    }
+        else
+        {
+            image.ReadFromBinaryFile(dispImagePath);
+        }
 
+        //================================================
+        // Compute the depth map
+        //================================================
+
+
+        Matrix<double> intrinsics = camera.get_K();
+
+        double focalLength = intrinsics(0,0);
+
+        double par = (baseline*focalLength);
+
+        for(int i = 0; i < Globals::dImWidth; i++)
+        {
+            for(int j = 0; j < Globals::dImHeight; j++)
+            {
+                depthMap(i,j) = max(0.0, min(30.0,(par/(image(i,j)))/1000.0));
+            }
+        }
+
+
+    } else {
+
+        char depthImagePath[128];
+
+        sprintf(depthImagePath, Globals::tempDepthL.c_str(), frame_nr);
+        depthMap.ReadFromPGM(depthImagePath);
+
+//        if (Globals::verbose) {
+//            cout << "Depth map:\n";
+//            for(int i = 0; i < Globals::dImWidth; i++)
+//            {
+//                for(int j = 0; j < Globals::dImHeight; j++)
+//                {
+//                    cout << depthMap(i,j) << ",";
+//                }
+//                cout << endl;
+//            }
+//            cout << endl;
+//        }
+    }
     return depthMap;
 }
 

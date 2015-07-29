@@ -21,9 +21,9 @@ camPath_left = camera
 sImagePath_left = camera1/image_%08d_0.ppm
 
 #string pattern path to your depth map files exp:
-tempDepthL = camera1/disparity_%08d_0.pgm
+tempDepthL = camera1/depth_%08d_0.pgm
 
-
+is_depth_disparity_map = false
 is_project_plane_to_world = false
 
 

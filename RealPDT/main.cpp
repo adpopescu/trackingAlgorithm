@@ -69,6 +69,7 @@ void ReadConfigFile()
     config.readInto(Globals::sImagePath_left, "sImagePath_left");
     config.readInto(Globals::tempDepthL, "tempDepthL");
     config.readInto(Globals::path_to_planes, "path_to_planes");
+    Globals::is_depth_disparity_map = config.read("is_depth_disparity_map", true);
 
     //=====================================
     // Distance Range Accepted Detections

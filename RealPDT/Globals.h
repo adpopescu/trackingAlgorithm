@@ -22,6 +22,7 @@ public:
     static string tempDepthL;
     static string path_to_planes;
     static bool is_project_plane_to_world;
+    static bool is_depth_disparity_map;
 
     ////////////////////////////////////////
     // Distance Range Accepted Detections
