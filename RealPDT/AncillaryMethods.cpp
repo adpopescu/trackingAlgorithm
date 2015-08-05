@@ -198,13 +198,14 @@ Matrix<double>  AncillaryMethods::GetDepthLibelas(int frame_nr, const Camera& ca
 
 //        if (Globals::verbose) {
 //            cout << "Depth map:\n";
-//            for(int i = 0; i < Globals::dImWidth; i++)
+//            const int stride = 10;
+//            for(int i = 0; i < Globals::dImWidth; i+=stride)
 //            {
-//                for(int j = 0; j < Globals::dImHeight; j++)
+//                for(int j = 0; j < Globals::dImHeight; j+=stride)
 //                {
 //                    cout << depthMap(i,j) << ",";
 //                }
-//                cout << endl;
+//                cout <<"|"<< endl;
 //            }
 //            cout << endl;
 //        }

@@ -593,8 +593,13 @@ template <class T> void Matrix<T>::ReadFromPGM(const char* filename)
     delete[] data_;
     data_ = new T[x_size_*y_size_];
     // Read image data
-    for (int i = 0; i < x_size_*y_size_; i++)
-        data_[i] = getc(stream);
+    for (int i = 0; i < x_size_*y_size_; i++) {
+        long long datum=0;
+        for (int byte=0; byte < 2; byte++) {
+            datum=(getc(stream) << byte*8)|datum;
+        }
+        data_[i] = datum;
+    }
     fclose(stream);
 }
 
