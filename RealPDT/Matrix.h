@@ -598,7 +598,7 @@ template <class T> void Matrix<T>::ReadFromPGM(const char* filename)
         for (int byte=0; byte < 2; byte++) {
             datum=(getc(stream) << byte*8)|datum;
         }
-        data_[i] = datum;
+        data_[i] = datum/1000.0;
     }
     fclose(stream);
 }

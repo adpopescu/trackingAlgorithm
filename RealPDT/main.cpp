@@ -697,6 +697,20 @@ public:
                 depth_map.data()[i]=v;
         }
 
+        if (true) {
+            cout << "Depth map:\n";
+            const int stride = 10;
+            for(int i = 0; i < Globals::dImWidth; i+=stride)
+            {
+                for(int j = 0; j < Globals::dImHeight; j+=stride)
+                {
+                    cout << depth_map(i,j) << ",";
+                }
+                cout <<"|"<< endl;
+            }
+            cout << endl;
+        }
+
         ////////////////// FOVIS /////////////////////////////////////////////////////////////////
         ct=CPUTime();
 
