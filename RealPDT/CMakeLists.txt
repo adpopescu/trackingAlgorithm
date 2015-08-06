@@ -27,6 +27,7 @@ set ( RealPDT_HDRS
 	Matrix.h
 	ROI.h
 	KConnectedComponentLabeler.h
+	detectiontrackingsystem.h
 	CPoint.h
 	camera/Camera.h
 	config_file/ConfigFile.h
@@ -109,6 +110,7 @@ set ( RealPDT_SRCS
 	pointcloud.cpp
 	depthdetector.cpp
 	groundplaneestimator.cpp
+	detectiontrackingsystem.cpp
 	detector.cpp
 	segmentation_roi/SegmentedObj.cpp
 	segmentation_roi/SegmentationROI.cpp
