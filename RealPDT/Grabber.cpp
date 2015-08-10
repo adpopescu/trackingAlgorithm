@@ -16,18 +16,16 @@ Grabber::Grabber(void (*call_back_function)(const float *, const unsigned char *
     rc = openni::OpenNI::initialize();
 
     rc = m_device.open(deviceURI);
-    m_device.setDepthColorSyncEnabled(true);
     if (rc != openni::STATUS_OK)
     {
         printf("SimpleViewer: Device open failed:\n%s\n", openni::OpenNI::getExtendedError());
         openni::OpenNI::shutdown();
         exit(1);
     }
+    m_device.setDepthColorSyncEnabled(true);
 
     rc = m_depthStream.create(m_device, openni::SENSOR_DEPTH);
-    openni::VideoMode vm = m_depthStream.getVideoMode();
-    vm.setResolution(640,480);
-    m_depthStream.setVideoMode(vm);
+
     if (rc == openni::STATUS_OK)
     {
         rc = m_depthStream.start();
@@ -41,11 +39,11 @@ Grabber::Grabber(void (*call_back_function)(const float *, const unsigned char *
     {
         printf("SimpleViewer: Couldn't find depth stream:\n%s\n", openni::OpenNI::getExtendedError());
     }
+    openni::VideoMode vm = m_depthStream.getVideoMode();
+    vm.setResolution(640,480);
+    m_depthStream.setVideoMode(vm);
 
     rc = m_colorStream.create(m_device, openni::SENSOR_COLOR);
-    vm = m_colorStream.getVideoMode();
-    vm.setResolution(640,480);
-    m_colorStream.setVideoMode(vm);
     if (rc == openni::STATUS_OK)
     {
         rc = m_colorStream.start();
@@ -59,6 +57,10 @@ Grabber::Grabber(void (*call_back_function)(const float *, const unsigned char *
     {
         printf("SimpleViewer: Couldn't find color stream:\n%s\n", openni::OpenNI::getExtendedError());
     }
+    vm = m_colorStream.getVideoMode();
+    vm.setResolution(640,480);
+    m_colorStream.setVideoMode(vm);
+
 
     if (!m_depthStream.isValid() || !m_colorStream.isValid())
     {

@@ -30,6 +30,7 @@
 #include <queue>
 
 #include "detectiontrackingsystem.h"
+#include "timing.h"
 
 string path_config_file = "config_Asus.inp";
 
@@ -38,16 +39,6 @@ string path_config_file = "config_Asus.inp";
 ///////////////////////////////////////////////////////////////////////
 //time_t  user_time_start, user_time_end;
 //double  cpu_time_start, cpu_time_end;
-
-inline double CPUTime()
-{
-    struct rusage ruse;
-    //    getrusage(RUSAGE_SELF,&ruse);
-    getrusage(RUSAGE_THREAD,&ruse);
-
-    return ( ruse.ru_utime.tv_sec + ruse.ru_stime.tv_sec +
-             1e-6 * (ruse.ru_utime.tv_usec + ruse.ru_stime.tv_usec) );
-}
 
 ///////////////////////////////////////////////////////////////////////
 // ReadConfigFile:
@@ -327,41 +318,9 @@ void ProcessCommandArgs(int argc, char **argv)
     }
 }
 
-///////////////////////////////////////////////////////////////////////
-// ReadUpperBodyTemplate:
-//      Reads template of upper body from file and resizes it to
-//      Global::template_size which is determined in ConfigFile.
-//
-// parameters:
-//      output:
-//          upper_body_template -   Template of upper body.
-///////////////////////////////////////////////////////////////////////
-void ReadUpperBodyTemplate(Matrix<double>& upper_body_template)
-{
-    // read template from file
-    upper_body_template.ReadFromTXT("upper_temp_n.txt", 150, 150);
 
-    // resize it to the fixed size that is defined in Config File
-    if(upper_body_template.x_size() > Globals::template_size)
-    {
-        upper_body_template.DownSample(Globals::template_size, Globals::template_size);
-    }
-    else if(upper_body_template.x_size() < Globals::template_size)
-    {
-        upper_body_template.UpSample(Globals::template_size, Globals::template_size);
-    }
-}
 
-void RenderBBox2D(const Vector<double>& bbox, CImg<unsigned char>& image, int r, int g, int b)
-{
-    int x =(int) bbox(0);
-    int y =(int) bbox(1);
-    int w =(int) bbox(2);
-    int h =(int) bbox(3);
 
-    const unsigned char color[] = {r,g,b};
-    image.draw_rectangle_1(x,y,x+w,y+h,color,3);
-}
 
 ///////////////////////////////////////////////////////////////////////
 // PreLoadData:
@@ -681,179 +640,179 @@ void exportBBOX(Vector<Hypo> Hypos, Camera cam, int frame, Vector<Vector<double>
 time_t  user_time_start, user_time_end;
 double  cpu_time_start, cpu_time_end;
 
-int main_preload()
-{
-    Vector<Camera> cameras;
-    Vector<CImg<unsigned char> > images;
-    Vector<Matrix<double> > depth_maps;
-    PreLoadData(cameras, images, depth_maps);
-
-    Matrix<double> upper_body_template;
-
-    ReadUpperBodyTemplate(upper_body_template);
-
-    // Timing Code - Start
-    time(&user_time_start);
-    cpu_time_start = CPUTime();
-
-    //    Detector detector;
-    Detector* detector=0;
-    Detector_Seg* detector_seg=0;
-    if(Globals::use_segmentation_roi)
-    {
-        if(Globals::use_local_max)
-            detector_seg = new DepthDetector_LM_Seg();
-        else
-            detector_seg = new DepthDetector_Seg();
-    }
-    else
-    {
-        if(Globals::use_local_max)
-            detector = new DepthDetector_LM();
-        else
-            detector = new DepthDetector();
-    }
-    HOGDetector hog_detector;
-    hog_detector.rescore=true;
-
-    GroundPlaneEstimator GPEstimator;
-    Tracker tracker;
-    Vector< Hypo > HyposAll;
-    Detections det_comb(23,0);
-
-
-    ofstream* det_file;
-    if(Globals::export_bounding_box)
-    {
-        cout<<Globals::bounding_box_path.c_str()<<endl;
-        det_file = new ofstream(Globals::bounding_box_path.c_str());
-    }
-
-    CImg<unsigned char> cim_out(Globals::dImWidth*2,Globals::dImHeight,1,3);
-
-    for(int current_frame = 0; current_frame < Globals::numberFrames; current_frame++)
-    {
-        int cnt = current_frame+Globals::nOffset;
-        if(Globals::verbose){
-            cout << "\33[33;40;1m" << "---------------------------------------------------------------------------------------------------------------" << "\33[0m" << endl;
-            cout << "\33[33;40;1m" <<"                                  Processing image " << current_frame + Globals::nOffset << "\33[0m"<< endl;
-            cout << "\33[33;40;1m" << "---------------------------------------------------------------------------------------------------------------" << "\33[0m" << endl;
-        }
-
-        ///////////////////////////////////////////////////////////////////////////
-        // main Process
-        PointCloud point_cloud(cameras(current_frame), depth_maps(current_frame));
-        //        Vector<double> gp = GPEstimator.ComputeGroundPlane(point_cloud);
-        Vector<Vector< double > > detected_bounding_boxes;
-        if(Globals::use_segmentation_roi)
-            detector_seg->ProcessFrame(cameras(current_frame), depth_maps(current_frame), point_cloud, upper_body_template, detected_bounding_boxes);
-        else
-            detector->ProcessFrame(cameras(current_frame), depth_maps(current_frame), point_cloud, upper_body_template, detected_bounding_boxes);
-        ///////////////////////////////////////////////////////////////////////////
-
-        CImg<unsigned char> cnt_image=images(current_frame);
-
-        Vector<Vector < double > > OutputHOGdetL;
-        if(Globals::use_hog)
-            OutputHOGdetL = hog_detector.runHogPr2(cnt,cnt_image.get_permute_axes("cxyz").data(),cameras(current_frame), detected_bounding_boxes);
-
-        bool multiply_by_3 = false;
-        for(int i = 0; i < detected_bounding_boxes.getSize(); i++)
-        {
-            detected_bounding_boxes(i)(3) = detected_bounding_boxes(i)(3) *3.0;
-        }
-
-        if(Globals::use_hog)
-            detected_bounding_boxes = BboxNMS(detected_bounding_boxes,0.5);
-
-        // Tracking ////////////////////////////////////////////////////
-        Vector<double> oneDet(9);
-        for(int j = 0; j < detected_bounding_boxes.getSize(); ++j)
-        {
-            oneDet(0) = cnt;
-            oneDet(1) = j;
-            oneDet(2) = 1;
-            oneDet(3) = 1 - detected_bounding_boxes(j)(4)+1; // make sure that the score is always positive
-            oneDet(4) = detected_bounding_boxes(j)(0);
-            oneDet(5) = detected_bounding_boxes(j)(1);
-            oneDet(6) = detected_bounding_boxes(j)(2);
-            oneDet(7) = detected_bounding_boxes(j)(3);
-            oneDet(8) = detected_bounding_boxes(j)(5);
-            OutputHOGdetL.pushBack(oneDet);
-        }
-        tracker.process_tracking_oneFrame(HyposAll, det_comb, cnt, OutputHOGdetL, cnt_image, cameras(current_frame));
-
-        ////////////////////////////////////////////////////////////////
-
-
-        if(Globals::export_bounding_box)
-        {
-            // without tracking
-//            WriteToFile(detected_bounding_boxes,current_frame+Globals::nOffset,*det_file,multiply_by_3);
-
-            // with tracking
-            Vector<Vector<double> > bboxes;
-            exportBBOX(tracker.HyposMDL, cameras(current_frame), current_frame, bboxes);
-            WriteToFile(bboxes,current_frame+Globals::nOffset,*det_file,multiply_by_3,false);
-        }
-
-        if(Globals::export_result_images)
-        {
-            //without tracking
-//            for(int jj = 0; jj < detected_bounding_boxes.getSize(); jj++)
+//int main_preload()
+//{
+//    Vector<Camera> cameras;
+//    Vector<CImg<unsigned char> > images;
+//    Vector<Matrix<double> > depth_maps;
+//    PreLoadData(cameras, images, depth_maps);
+//
+//    Matrix<double> upper_body_template;
+//
+//    ReadUpperBodyTemplate(upper_body_template);
+//
+//    // Timing Code - Start
+//    time(&user_time_start);
+//    cpu_time_start = CPUTime();
+//
+//    //    Detector detector;
+//    Detector* detector=0;
+//    Detector_Seg* detector_seg=0;
+//    if(Globals::use_segmentation_roi)
+//    {
+//        if(Globals::use_local_max)
+//            detector_seg = new DepthDetector_LM_Seg();
+//        else
+//            detector_seg = new DepthDetector_Seg();
+//    }
+//    else
+//    {
+//        if(Globals::use_local_max)
+//            detector = new DepthDetector_LM();
+//        else
+//            detector = new DepthDetector();
+//    }
+//    HOGDetector hog_detector;
+//    hog_detector.rescore=true;
+//
+//    GroundPlaneEstimator GPEstimator;
+//    Tracker tracker;
+//    Vector< Hypo > HyposAll;
+//    Detections det_comb(23,0);
+//
+//
+//    ofstream* det_file;
+//    if(Globals::export_bounding_box)
+//    {
+//        cout<<Globals::bounding_box_path.c_str()<<endl;
+//        det_file = new ofstream(Globals::bounding_box_path.c_str());
+//    }
+//
+//    CImg<unsigned char> cim_out(Globals::dImWidth*2,Globals::dImHeight,1,3);
+//
+//    for(int current_frame = 0; current_frame < Globals::numberFrames; current_frame++)
+//    {
+//        int cnt = current_frame+Globals::nOffset;
+//        if(Globals::verbose){
+//            cout << "\33[33;40;1m" << "---------------------------------------------------------------------------------------------------------------" << "\33[0m" << endl;
+//            cout << "\33[33;40;1m" <<"                                  Processing image " << current_frame + Globals::nOffset << "\33[0m"<< endl;
+//            cout << "\33[33;40;1m" << "---------------------------------------------------------------------------------------------------------------" << "\33[0m" << endl;
+//        }
+//
+//        ///////////////////////////////////////////////////////////////////////////
+//        // main Process
+//        PointCloud point_cloud(cameras(current_frame), depth_maps(current_frame));
+//        //        Vector<double> gp = GPEstimator.ComputeGroundPlane(point_cloud);
+//        Vector<Vector< double > > detected_bounding_boxes;
+//        if(Globals::use_segmentation_roi)
+//            detector_seg->ProcessFrame(cameras(current_frame), depth_maps(current_frame), point_cloud, upper_body_template, detected_bounding_boxes);
+//        else
+//            detector->ProcessFrame(cameras(current_frame), depth_maps(current_frame), point_cloud, upper_body_template, detected_bounding_boxes);
+//        ///////////////////////////////////////////////////////////////////////////
+//
+//        CImg<unsigned char> cnt_image=images(current_frame);
+//
+//        Vector<Vector < double > > OutputHOGdetL;
+//        if(Globals::use_hog)
+//            OutputHOGdetL = hog_detector.runHogPr2(cnt,cnt_image.get_permute_axes("cxyz").data(),cameras(current_frame), detected_bounding_boxes);
+//
+//        bool multiply_by_3 = false;
+//        for(int i = 0; i < detected_bounding_boxes.getSize(); i++)
+//        {
+//            detected_bounding_boxes(i)(3) = detected_bounding_boxes(i)(3) *3.0;
+//        }
+//
+//        if(Globals::use_hog)
+//            detected_bounding_boxes = BboxNMS(detected_bounding_boxes,0.5);
+//
+//        // Tracking ////////////////////////////////////////////////////
+//        Vector<double> oneDet(9);
+//        for(int j = 0; j < detected_bounding_boxes.getSize(); ++j)
+//        {
+//            oneDet(0) = cnt;
+//            oneDet(1) = j;
+//            oneDet(2) = 1;
+//            oneDet(3) = 1 - detected_bounding_boxes(j)(4)+1; // make sure that the score is always positive
+//            oneDet(4) = detected_bounding_boxes(j)(0);
+//            oneDet(5) = detected_bounding_boxes(j)(1);
+//            oneDet(6) = detected_bounding_boxes(j)(2);
+//            oneDet(7) = detected_bounding_boxes(j)(3);
+//            oneDet(8) = detected_bounding_boxes(j)(5);
+//            OutputHOGdetL.pushBack(oneDet);
+//        }
+//        tracker.process_tracking_oneFrame(HyposAll, det_comb, cnt, OutputHOGdetL, cnt_image, cameras(current_frame));
+//
+//        ////////////////////////////////////////////////////////////////
+//
+//
+//        if(Globals::export_bounding_box)
+//        {
+//            // without tracking
+////            WriteToFile(detected_bounding_boxes,current_frame+Globals::nOffset,*det_file,multiply_by_3);
+//
+//            // with tracking
+//            Vector<Vector<double> > bboxes;
+//            exportBBOX(tracker.HyposMDL, cameras(current_frame), current_frame, bboxes);
+//            WriteToFile(bboxes,current_frame+Globals::nOffset,*det_file,multiply_by_3,false);
+//        }
+//
+//        if(Globals::export_result_images)
+//        {
+//            //without tracking
+////            for(int jj = 0; jj < detected_bounding_boxes.getSize(); jj++)
+////            {
+////                detected_bounding_boxes(jj)(3)/=3;
+////                RenderBBox2D(detected_bounding_boxes(jj), images[current_frame], 255, 0, 0);
+////            }
+//
+//            // with tracker
+//            Vector<Vector<double> > bboxes;
+//            exportBBOX(tracker.HyposMDL, cameras(current_frame), current_frame, bboxes);
+//            for(int jj = 0; jj < bboxes.getSize(); jj++)
 //            {
-//                detected_bounding_boxes(jj)(3)/=3;
-//                RenderBBox2D(detected_bounding_boxes(jj), images[current_frame], 255, 0, 0);
+//                bboxes(jj)(3)/=3.0;
+//                RenderBBox2D(bboxes(jj), images[current_frame], 255, 0, 0);
 //            }
-
-            // with tracker
-            Vector<Vector<double> > bboxes;
-            exportBBOX(tracker.HyposMDL, cameras(current_frame), current_frame, bboxes);
-            for(int jj = 0; jj < bboxes.getSize(); jj++)
-            {
-                bboxes(jj)(3)/=3.0;
-                RenderBBox2D(bboxes(jj), images[current_frame], 255, 0, 0);
-            }
-
-            char path[128];
-            sprintf(path, Globals::result_images_path.c_str(), current_frame + Globals::nOffset);
-            cim_out.draw_image(images(current_frame));
-            cim_out.draw_image(Globals::dImWidth,cnt_image);
-            cim_out.save(path);
-        }
-    }
-    if(Globals::export_bounding_box)
-    {
-        det_file->close();
-    }
-
-    // Timing Code - End
-    time(&user_time_end);
-    cpu_time_end = CPUTime();
-    cout << "TIMING :" << cpu_time_end-cpu_time_start << "s (system), "
-         << user_time_end-user_time_start << "s (user)" << endl;
-
-    delete detector;
-    delete detector_seg;
-
-    return 0;
-}
+//
+//            char path[128];
+//            sprintf(path, Globals::result_images_path.c_str(), current_frame + Globals::nOffset);
+//            cim_out.draw_image(images(current_frame));
+//            cim_out.draw_image(Globals::dImWidth,cnt_image);
+//            cim_out.save(path);
+//        }
+//    }
+//    if(Globals::export_bounding_box)
+//    {
+//        det_file->close();
+//    }
+//
+//    // Timing Code - End
+//    time(&user_time_end);
+//    cpu_time_end = CPUTime();
+//    cout << "TIMING :" << cpu_time_end-cpu_time_start << "s (system), "
+//         << user_time_end-user_time_start << "s (user)" << endl;
+//
+//    delete detector;
+//    delete detector_seg;
+//
+//    return 0;
+//}
 
 int main(int argc, char** argv)
 {
     ProcessCommandArgs(argc, argv);
     ReadConfigFile();
 
-    if(Globals::preload)
-        main_preload();
-    else
-    {
-        DetectionTrackingSystem v;
-        DetectionTrackingSystem::_this = &v;
-        v.run();
+    if (Globals::preload) {
+        // main_preload();
+        cerr << "Preload mode not supported" << endl;
+        exit(-1);  // FIXME: This is broken
+    } else {
+        DetectionTrackingSystem *v=DetectionTrackingSystem::getInstance();
+        v->run();
     }
 
-    cout<<"end"<<endl;
+    cout << "end" << endl;
     exit(0);
     return 0;
 }

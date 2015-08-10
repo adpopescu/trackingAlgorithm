@@ -2,8 +2,8 @@
 // Created by dtenty on 06/08/15.
 //
 
-#ifndef REALPDT_DETECTIONTRACKINGSYSTEM_H
-#define REALPDT_DETECTIONTRACKINGSYSTEM_H
+#ifndef REALPDT_DETECTIONTRACKINGSYSTEM_H_
+#define REALPDT_DETECTIONTRACKINGSYSTEM_H_
 
 
 #include "Eigen/Core"
@@ -20,6 +20,7 @@
 #include "depthdetector_seg.h"
 #include "depthdetector_lm_seg.h"
 #include "groundplaneestimator.h"
+#include "timing.h"
 #include "fovis/fovis.hpp"
 #include "main.h"
 #include "Streaming/StreamingApp.h"
@@ -32,15 +33,12 @@
 
 
 
-enum DETECTOR_MODE
-{
-    DEPTH_DETECTOR,
-    DEPTH_LM_DETECTOR
-} detector_mode;
+
 
 class DetectionTrackingSystem
 {
 public:
+    static DetectionTrackingSystem *getInstance();
 
     void get_image(unsigned char* b_image, uint w, uint h, CImg<unsigned char>& cim);
 
@@ -106,7 +104,7 @@ public:
 
     void main_process(unsigned char* b_image, float* b_depth, uint w, uint h);
 
-    static DetectionTrackingSystem* _this;
+
 
     static void grabber_callback(const float *depth, const unsigned char *image);
 
@@ -125,7 +123,7 @@ public:
 
     void init();
 
-    DetectionTrackingSystem();
+
 
     ~DetectionTrackingSystem();
 
@@ -195,10 +193,20 @@ public:
         ROI_MODE,
         ODOM_MODE
     } display_mode;
+
+    enum DETECTOR_MODE
+    {
+        DEPTH_DETECTOR,
+        DEPTH_LM_DETECTOR
+    } detector_mode;
+
+ private:
+    DetectionTrackingSystem();
+    static DetectionTrackingSystem* _this;
+
+    void RenderBBox2D(const Vector<double>& bbox, CImg<unsigned char>& image, int r, int g, int b);
+
+    void ReadUpperBodyTemplate(Matrix<double> &upper_body_template);
 };
 
-DetectionTrackingSystem* DetectionTrackingSystem::_this = NULL;
-
-
-
-#endif //REALPDT_DETECTIONTRACKINGSYSTEM_H
+#endif //REALPDT_DETECTIONTRACKINGSYSTEM_H_

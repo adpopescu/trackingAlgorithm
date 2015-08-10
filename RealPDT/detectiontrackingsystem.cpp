@@ -4,6 +4,8 @@
 
 #include "detectiontrackingsystem.h"
 
+DetectionTrackingSystem* DetectionTrackingSystem::_this = NULL;
+
 void DetectionTrackingSystem::get_image(unsigned char* b_image, uint w, uint h, CImg<unsigned char>& cim)
 {
     unsigned char* ptr = b_image;
@@ -248,14 +250,14 @@ string DetectionTrackingSystem::isometryToString(const Eigen::Isometry3d &m) {
 }
 
 
-static void* DetectionTrackingSystem::hog_thread_function(void* params)
+void* DetectionTrackingSystem::hog_thread_function(void* params)
 {
     HogParams* hog_params = (struct HogParams*) params;
     *(hog_params->OutputHOGdetL) = hog_params->_this->hog_detector.runHog(hog_params->frame,hog_params->image,hog_params->camera, *(hog_params->detected_bounding_boxes));
     pthread_exit(NULL);
 }
 
-static void* DetectionTrackingSystem::upper_thread_function(void* params)
+void* DetectionTrackingSystem::upper_thread_function(void* params)
 {
     UpperParams* upper_params = (struct UpperParams*) params;
     if(upper_params->_this->is_seg)
@@ -273,7 +275,7 @@ static void* DetectionTrackingSystem::upper_thread_function(void* params)
     pthread_exit(NULL);
 }
 
-static void* DetectionTrackingSystem::get_files(void* obj)
+void* DetectionTrackingSystem::get_files(void* obj)
 {
     DetectionTrackingSystem* o = (DetectionTrackingSystem*)obj;
     long int frm1 = 0;
@@ -325,6 +327,42 @@ DetectionTrackingSystem::~DetectionTrackingSystem()
 {
     delete odom;
     delete fovis_rect;
+}
+
+///////////////////////////////////////////////////////////////////////
+// ReadUpperBodyTemplate:
+//      Reads template of upper body from file and resizes it to
+//      Global::template_size which is determined in ConfigFile.
+//
+// parameters:
+//      output:
+//          upper_body_template -   Template of upper body.
+///////////////////////////////////////////////////////////////////////
+void DetectionTrackingSystem::ReadUpperBodyTemplate(Matrix<double>& upper_body_template)
+{
+    // read template from file
+    upper_body_template.ReadFromTXT("upper_temp_n.txt", 150, 150);
+
+    // resize it to the fixed size that is defined in Config File
+    if(upper_body_template.x_size() > Globals::template_size)
+    {
+        upper_body_template.DownSample(Globals::template_size, Globals::template_size);
+    }
+    else if(upper_body_template.x_size() < Globals::template_size)
+    {
+        upper_body_template.UpSample(Globals::template_size, Globals::template_size);
+    }
+}
+
+void DetectionTrackingSystem::RenderBBox2D(const Vector<double>& bbox, CImg<unsigned char>& image, int r, int g, int b)
+{
+    int x =(int) bbox(0);
+    int y =(int) bbox(1);
+    int w =(int) bbox(2);
+    int h =(int) bbox(3);
+
+    const unsigned char color[] = {r,g,b};
+    image.draw_rectangle_1(x,y,x+w,y+h,color,3);
 }
 
 void DetectionTrackingSystem::init()
@@ -506,7 +544,7 @@ void DetectionTrackingSystem::check_keys()
         show_stat = false;
 }
 
-void DetectionTrackingSystem::sink_frame(long int& frm, bool is_runing = true)
+void DetectionTrackingSystem::sink_frame(long int& frm, bool is_runing)
 {
     char pth[200];
 
@@ -581,7 +619,7 @@ void DetectionTrackingSystem::get_from_file(long int frm)
     main_process(b_image, b_depth, Globals::dImWidth, Globals::dImHeight);
 }
 
-static void DetectionTrackingSystem::grabber_callback(const float *depth, const unsigned char *image)
+void DetectionTrackingSystem::grabber_callback(const float *depth, const unsigned char *image)
 {
     uint w = Globals::dImWidth, h = Globals::dImHeight;
 
@@ -689,11 +727,11 @@ void DetectionTrackingSystem::main_process(unsigned char* b_image, float* b_dept
         return;
     }
 
-    ::Eigen::Transform cam_to_local = odom->getPose();
-    ::Eigen::Transform motion =  odom->getMotionEstimate();
+    Eigen::Isometry3d cam_to_local = odom->getPose();
+    Eigen::Isometry3d motion =  odom->getMotionEstimate();
 
-    Matrix<double> m1 = cam_to_local.matrix().inverse();
-    Matrix<double> m2 = motion.matrix().inverse();
+    Eigen::Matrix4d m1 = cam_to_local.matrix().inverse();
+    Eigen::Matrix4d m2 = motion.matrix().inverse();
     mm = Matrix<double>(4,4,m1.data());
     Matrix<double> motion_matrix(4,4,m2.data());
 
@@ -958,4 +996,11 @@ void DetectionTrackingSystem::main_process(unsigned char* b_image, float* b_dept
 
     delete[] b_gray_image;
     delete fv_dp;
+}
+
+DetectionTrackingSystem *DetectionTrackingSystem::getInstance() {
+    if (_this==NULL)
+        _this=new DetectionTrackingSystem();
+
+    return  _this;
 }
