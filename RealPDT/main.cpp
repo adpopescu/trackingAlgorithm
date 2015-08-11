@@ -271,6 +271,7 @@ void ReadConfigFile()
     ///////////////////////////Recording /////////////////////
     Globals::from_camera = config.read("from_camera", true);
     config.readInto(Globals::from_file_path, "from_file_path");
+    Globals::use_raw_format = config.read("use_raw_format",true);
 
     //////////////////////////Streaming///////////////////////
     config.readInto(Globals::stream_dest_IP, "stream_dest_IP");

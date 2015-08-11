@@ -1,5 +1,4 @@
 cmake_minimum_required( VERSION 2.6 )
-set ( CMAKE_BUILD_TYPE Debug )
 add_definitions ( -Wall )
 find_package ( Qt4 REQUIRED )
 find_package(CUDA QUIET REQUIRED)

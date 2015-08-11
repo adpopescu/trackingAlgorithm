@@ -203,6 +203,7 @@ public:
     ///////////////////////////Recording /////////////////////
     static bool from_camera;
     static string from_file_path;
+    static bool use_raw_format;
 
     //////////////////////////Streaming///////////////////////
     static string stream_dest_IP;

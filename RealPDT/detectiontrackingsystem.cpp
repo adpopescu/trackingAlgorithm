@@ -598,25 +598,48 @@ void DetectionTrackingSystem::sink_frame(long int& frm, bool is_runing)
 
 void DetectionTrackingSystem::get_from_file(long int frm)
 {
-    char pth[200];
-    sprintf(pth,"%s/img_%08d", Globals::from_file_path.c_str(),frm);
-    ifstream imgf(pth, ios_base::binary);
-    sprintf(pth,"%s/dp_%08d", Globals::from_file_path.c_str(),frm);
-    ifstream dpf(pth, ios_base::binary);
-    if(!imgf.is_open() || !dpf.is_open())
-        return;
+    char rgb_image_file[200],depth_image_file[200];
+    string rgb_image_path(Globals::from_file_path),depth_image_path(Globals::from_file_path);
+    unsigned char *binary_image = new unsigned char[Globals::dImWidth * Globals::dImHeight * 3];
+    float *binary_depth = new float[Globals::dImWidth * Globals::dImHeight];
 
-    uint w = Globals::dImWidth, h = Globals::dImHeight;
+    sprintf(rgb_image_file,Globals::sImagePath_left.c_str(),frm);
+    sprintf(depth_image_file,Globals::tempDepthL.c_str(),frm);
 
-    unsigned char* b_image = new unsigned char[w*h*3];
-    imgf.read((char*)b_image, Globals::dImWidth* Globals::dImHeight*3);
-    imgf.close();
+    rgb_image_path+="/";
+    depth_image_path+="/";
+    rgb_image_path+=rgb_image_file;
+    depth_image_path+=depth_image_file;
 
-    float* b_depth = new float[h*w];
-    dpf.read((char*)b_depth, Globals::dImWidth* Globals::dImHeight*sizeof(float));
-    dpf.close();
+    if (Globals::use_raw_format) {
+        ifstream imgf(rgb_image_path.c_str(), ios_base::binary);
+        ifstream dpf(depth_image_path.c_str(), ios_base::binary);
+        if(!imgf.is_open() || !dpf.is_open())
+            cerr << "Unable to open input images" << endl;
+            exit(-1);
+        imgf.read((char *) binary_image, Globals::dImWidth * Globals::dImHeight * 3);
+        imgf.close();
 
-    main_process(b_image, b_depth, Globals::dImWidth, Globals::dImHeight);
+
+        dpf.read((char *) binary_depth, Globals::dImWidth * Globals::dImHeight * sizeof(float));
+        dpf.close();
+    } else {
+        CImg<unsigned char> rgb_image(rgb_image_path.c_str());
+        CImg<float> depth_image(depth_image_path.c_str());
+
+        unsigned char* ptr = binary_image;
+        for (unsigned int row = 0; row < Globals::dImHeight; ++row)
+        {
+            for (unsigned int col = 0; col < Globals::dImWidth; ++col)
+            {
+                *(ptr++)= rgb_image(col,row,0,0); // red component
+                *(ptr++)= rgb_image(col,row,0,1); // green
+                *(ptr++)= rgb_image(col,row,0,2); // blue
+            }
+        }
+        memcpy(binary_depth,depth_image.data(), Globals::dImWidth * Globals::dImHeight * sizeof(float));
+    }
+    main_process(binary_image, binary_depth, Globals::dImWidth, Globals::dImHeight);
 }
 
 void DetectionTrackingSystem::grabber_callback(const float *depth, const unsigned char *image)
@@ -651,19 +674,19 @@ void DetectionTrackingSystem::main_process(unsigned char* b_image, float* b_dept
             depth_map.data()[i]=v;
     }
 
-    if (true) {
-        cout << "Depth map:\n";
-        const int stride = 10;
-        for(int i = 0; i < Globals::dImWidth; i+=stride)
-        {
-            for(int j = 0; j < Globals::dImHeight; j+=stride)
-            {
-                cout << depth_map(i,j) << ",";
-            }
-            cout <<"|"<< endl;
-        }
-        cout << endl;
-    }
+//    if (true) {
+//        cout << "Depth map:\n";
+//        const int stride = 10;
+//        for(int i = 0; i < Globals::dImWidth; i+=stride)
+//        {
+//            for(int j = 0; j < Globals::dImHeight; j+=stride)
+//            {
+//                cout << depth_map(i,j) << ",";
+//            }
+//            cout <<"|"<< endl;
+//        }
+//        cout << endl;
+//    }
 
     ////////////////// FOVIS /////////////////////////////////////////////////////////////////
     ct= CPUTime();

@@ -192,6 +192,7 @@ double Globals::precisionZ;
 ///////////////////////////Recording /////////////////////
 bool Globals::from_camera;
 string Globals::from_file_path;
+bool Globals::use_raw_format;
 
 //////////////////////////Streaming///////////////////////
 string Globals::stream_dest_IP;
