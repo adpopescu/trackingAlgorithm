@@ -821,6 +821,9 @@ void DetectionTrackingSystem::main_process(unsigned char* b_image, float* b_dept
         is_last_gp_valid = true;
         //            motion_xyz = Eigen::Vector3d();
         //            motion_rpy = Eigen::Vector3d();
+        if (Globals::verbose) {
+            cout << "gp vector: " << last_gp(0) << "," << last_gp(1) << "," << last_gp(2) << endl;
+        }
     }
     else
     {
