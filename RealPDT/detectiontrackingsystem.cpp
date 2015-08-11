@@ -813,32 +813,40 @@ void DetectionTrackingSystem::main_process(unsigned char* b_image, float* b_dept
 
     //        double dot = fabs(motion_xyz(0)*last_gp(0)+motion_xyz(1)*last_gp(1)+motion_xyz(2)*last_gp(2))/motion_xyz.norm();
     //        cout<<dot<<endl;
-    if(display.is_keyG() || !is_last_gp_valid || gp_count_down>0)// ||rx>1 || ry>1 || rz>1 ||/*fabs(motion_xyz(0))>0.01 || */fabs(motion_xyz(1))>0.01 /*|| fabs(motion_xyz(2))>0.01*/)
-    {
-        cout<<"gp estimation "<<gp_count_down<<endl;
-        --gp_count_down;
-        last_gp = GPEstimator.ComputeGroundPlane(point_cloud);
-        is_last_gp_valid = true;
-        //            motion_xyz = Eigen::Vector3d();
-        //            motion_rpy = Eigen::Vector3d();
-        if (Globals::verbose) {
-            cout << "gp vector: " << last_gp(0) << "," << last_gp(1) << "," << last_gp(2) << endl;
+    if (Globals::compute_ground_plane) {
+        if (display.is_keyG() || !is_last_gp_valid || gp_count_down >
+                                                      0)// ||rx>1 || ry>1 || rz>1 ||/*fabs(motion_xyz(0))>0.01 || */fabs(motion_xyz(1))>0.01 /*|| fabs(motion_xyz(2))>0.01*/)
+        {
+            cout << "gp estimation " << gp_count_down << endl;
+            --gp_count_down;
+            last_gp = GPEstimator.ComputeGroundPlane(point_cloud);
+            is_last_gp_valid = true;
+            //            motion_xyz = Eigen::Vector3d();
+            //            motion_rpy = Eigen::Vector3d();
+            if (Globals::verbose) {
+                cout << "gp vector: " << last_gp(0) << "," << last_gp(1) << "," << last_gp(2)
+                    << "," << last_gp(3) << endl;
+            }
         }
-    }
-    else
-    {
-        Matrix<double> rotate(motion_matrix, 0,2,0,2);
-        Vector<double> t(motion_matrix(0,3), motion_matrix(1,3), motion_matrix(2,3));
-        Vector<double> pv(last_gp(0), last_gp(1), last_gp(2));
-        rotate.Transpose();
-        pv = rotate * pv;
+        else {
+            Matrix<double> rotate(motion_matrix, 0, 2, 0, 2);
+            Vector<double> t(motion_matrix(0, 3), motion_matrix(1, 3), motion_matrix(2, 3));
+            Vector<double> pv(last_gp(0), last_gp(1), last_gp(2));
+            rotate.Transpose();
+            pv = rotate * pv;
 
-        double d = last_gp(3) - DotProduct(pv, t);
+            double d = last_gp(3) - DotProduct(pv, t);
 
-        last_gp(0) = pv(0)/pv.norm();
-        last_gp(1) = pv(1)/pv.norm();
-        last_gp(2) = pv(2)/pv.norm();
-        last_gp(3) = d;
+            last_gp(0) = pv(0) / pv.norm();
+            last_gp(1) = pv(1) / pv.norm();
+            last_gp(2) = pv(2) / pv.norm();
+            last_gp(3) = d;
+        }
+    } else {
+        last_gp(0) = Globals::ground_plane_0;
+        last_gp(1) = Globals::ground_plane_1;
+        last_gp(2) = Globals::ground_plane_2;
+        last_gp(3) = Globals::ground_plane_3;
     }
 
     Camera camera(base_camera.K(), R, t, last_gp);

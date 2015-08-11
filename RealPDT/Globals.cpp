@@ -14,6 +14,15 @@ bool Globals::is_project_plane_to_world;
 bool Globals::is_depth_disparity_map;
 
 ////////////////////////////////////////
+// Ground planes
+////////////////////////////////////////
+bool Globals::compute_ground_plane;
+double Globals::ground_plane_0;
+double Globals::ground_plane_1;
+double Globals::ground_plane_2;
+double Globals::ground_plane_3;
+
+////////////////////////////////////////
 // Distance Range Accepted Detections
 ////////////////////////////////////////
 double Globals::distance_range_accepted_detections;

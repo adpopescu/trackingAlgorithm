@@ -61,6 +61,16 @@ void ReadConfigFile()
     config.readInto(Globals::path_to_planes, "path_to_planes");
     Globals::is_depth_disparity_map = config.read("is_depth_disparity_map", true);
 
+    ////////////////////////////////////////
+    // Ground planes
+    ////////////////////////////////////////
+    Globals::compute_ground_plane= config.read("compute_ground_plane", true);
+    Globals::ground_plane_0=config.read<double>("ground_plane_0",0.0);
+    Globals::ground_plane_1=config.read<double>("ground_plane_1",0.0);
+    Globals::ground_plane_2=config.read<double>("ground_plane_2",0.0);
+    Globals::ground_plane_3=config.read<double>("ground_plane_3",0.0);
+
+
     //=====================================
     // Distance Range Accepted Detections
     //=====================================

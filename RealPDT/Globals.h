@@ -25,6 +25,15 @@ public:
     static bool is_depth_disparity_map;
 
     ////////////////////////////////////////
+    // Ground planes
+    ////////////////////////////////////////
+    static bool compute_ground_plane;
+    static double ground_plane_0;
+    static double ground_plane_1;
+    static double ground_plane_2;
+    static double ground_plane_3;
+
+    ////////////////////////////////////////
     // Distance Range Accepted Detections
     ////////////////////////////////////////
     static double distance_range_accepted_detections;
