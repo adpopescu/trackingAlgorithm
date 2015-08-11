@@ -82,6 +82,7 @@ int Globals::nOffset;
 // Console output
 ////////////////////////////////////////
 bool Globals::verbose = true;
+bool Globals::show_depth_map;
 
 ////////////////////////////////////////
 // Determines if save bounding boxes or not

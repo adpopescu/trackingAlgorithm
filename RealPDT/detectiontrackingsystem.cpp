@@ -626,6 +626,7 @@ void DetectionTrackingSystem::get_from_file(long int frm)
     } else {
         CImg<unsigned char> rgb_image(rgb_image_path.c_str());
         CImg<float> depth_image(depth_image_path.c_str());
+        depth_image/=1000;
 
         unsigned char* ptr = binary_image;
         for (unsigned int row = 0; row < Globals::dImHeight; ++row)
@@ -674,19 +675,19 @@ void DetectionTrackingSystem::main_process(unsigned char* b_image, float* b_dept
             depth_map.data()[i]=v;
     }
 
-//    if (true) {
-//        cout << "Depth map:\n";
-//        const int stride = 10;
-//        for(int i = 0; i < Globals::dImWidth; i+=stride)
-//        {
-//            for(int j = 0; j < Globals::dImHeight; j+=stride)
-//            {
-//                cout << depth_map(i,j) << ",";
-//            }
-//            cout <<"|"<< endl;
-//        }
-//        cout << endl;
-//    }
+    if (Globals::verbose && Globals::show_depth_map) {
+        cout << "Depth map:\n";
+        const int stride = 10;
+        for(int i = 0; i < Globals::dImWidth; i+=stride)
+        {
+            for(int j = 0; j < Globals::dImHeight; j+=stride)
+            {
+                cout << depth_map(i,j) << ",";
+            }
+            cout <<"|"<< endl;
+        }
+        cout << endl;
+    }
 
     ////////////////// FOVIS /////////////////////////////////////////////////////////////////
     ct= CPUTime();

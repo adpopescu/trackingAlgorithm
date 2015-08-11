@@ -129,6 +129,7 @@ void ReadConfigFile()
     // Console output
     //======================================
     Globals::verbose = config.read("verbose", false);
+    Globals::show_depth_map = config.read("show_depth_map", false);
 
     //=====================================
     // Determines if save bounding boxes or not

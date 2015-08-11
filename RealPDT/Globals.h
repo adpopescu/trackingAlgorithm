@@ -93,6 +93,7 @@ public:
     // Console output
     ////////////////////////////////////////
     static bool verbose;
+    static bool show_depth_map;
 
     ////////////////////////////////////////
     // Determines if save bounding boxes or not
@@ -216,6 +217,7 @@ public:
     static bool use_hog;
     static bool use_segmentation_roi;
     static bool use_local_max;
+
 };
 
 #endif	/* _GLOBALS_DENNIS_H */
