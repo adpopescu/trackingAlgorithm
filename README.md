@@ -1,12 +1,15 @@
 -------------------------------------------------------------------------------
--  RealPDT - Real-time People Detection and Tracking system
+-  RealPDT (modified) - Real-time People Detection and Tracking system
 -------------------------------------------------------------------------------
 
-This is a real-time RGB-D based people detection and tracking system,
+This is a modified version of the real-time RGB-D based people detection and tracking system,
 which can get its input from kinect based cameras or recorded sequences 
-of stereo cameras.
+of depth cameras.
 
-This system is presented in
+This distribution removes support for stereo cameras and adds support for loading sequences
+recorded with freenect (fakenect).
+
+The original system is presented in
 
 Real-Time RGB-D based People Detection and Tracking for Mobile Robots and Head-Worn Cameras
 O. Hosseini Jafari, D. Mitzel, B. Leibe
@@ -77,7 +80,7 @@ Dependencies
 
 * NVIDIA CUDA enabled GPU in your system (Optional - for using far range groundHOG detector)
 * CUDA installed
-* qmake 	- build tool
+* cmake 	- build tool
 * boost
 * eigen3
 * ImageMagick++
@@ -92,13 +95,13 @@ BUILD
 
 Run the following commands in the project top-level directory:
 
-$ qmake
+$ mkdir build
+$ cd build
+$ cmake ..
 $ make
 
 This should build the main project, RealPDT, and the library cudaHOG. If you are missing any 
-of the above dependencies you have to install them. Possibly you have to adapt some paths
-in the RealPDT.pro or cudaHOG.pro project files (in ./RealPDT/ or ./cudaHOG/), if qmake 
-exits with errors.
+of the above dependencies you have to install them.
 
 -----------------------------------
 USAGE
@@ -119,9 +122,13 @@ The command line option:
 SUPPORT
 -----------------------------------
 
-This software is developed and tested on Linux (Ubuntu 64Bit).
+This software is developed and tested on Linux (Ubuntu 14.04 64Bit).
 
-If there are questions regarding the implementation you may contact
+For this modified distribution you may contact
+David Tenty <dtenty@scs.ryerson.ca>
+Adrian Popescu <dapopesc@scs.ryerson.ca>
+
+For the original authors you may contact
 Omid Hosseini Jafari <omid.hosseini.jafari@rwth-aachen.de>
 Stefan Breuers <breuers@vision.rwth-aachen.de>
 
@@ -130,9 +137,9 @@ most welcome to contact us. If you want to submit any patches, we
 prefer git patch format.
 
 -----------------------------------
-CONTACT
+ORIGINAL AUTHORS
 -----------------------------------
 Omid Hosseini Jafari <omid.hosseini.jafari@rwth-aachen.de>
 Stefan Breuers <breuers@vision.rwth-aachen.de>
 
-Downloaded from www.vision.rwth-aachen.de/software
+Original source can be downloaded from www.vision.rwth-aachen.de/software

@@ -1,3 +1,4 @@
+Copyright (c) 2015, David Tenty, Adrian Popescu, Ryerson University
 Copyright (c) 2014, Computer Vision Group, RWTH Aachen University
 All rights reserved.
 
